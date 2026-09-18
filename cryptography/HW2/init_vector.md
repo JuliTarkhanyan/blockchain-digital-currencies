@@ -1,4 +1,4 @@
-# 4. Initialization Vector (IV) and H₀
+# Initialization Vector (IV) and H₀
 
 ## 1. What is an IV?
 
