@@ -1,4 +1,4 @@
-# 3. Padding
+# Padding
 
 Padding makes the message length fit the required block structure of a hash function.
 
