@@ -1,0 +1,405 @@
+# Practical Exercise: SHA-256 Padding
+
+Let:
+
+$$
+M = \text{"cde"}
+$$
+
+We need to:
+
+1. Write the ASCII decimal, hexadecimal, and binary representations.
+2. Perform SHA-256 padding.
+3. Show that the padded message is 512 bits.
+4. Write the complete padded block in hexadecimal.
+5. Identify \(W_0,\ldots,W_{15}\).
+
+We do **not** calculate the 64 compression rounds.
+
+---
+
+## 1. ASCII Representation
+
+The message is:
+
+```text
+c d e
+```
+
+Each character is one ASCII byte = 8 bits.
+
+| Character | ASCII Decimal | Hexadecimal | Binary     |
+| --------- | ------------: | ----------: | ---------- |
+| `c`       |            99 |        `63` | `01100011` |
+| `d`       |           100 |        `64` | `01100100` |
+| `e`       |           101 |        `65` | `01100101` |
+
+Therefore:
+
+**Decimal:**
+
+```text
+99 100 101
+```
+
+**Hexadecimal:**
+
+```text
+63 64 65
+```
+
+**Binary:**
+
+```text
+01100011 01100100 01100101
+```
+
+The original message length is:
+
+$$
+3 \times 8 = 24\text{ bits}
+$$
+
+So:
+
+$$
+L = 24
+$$
+
+---
+
+## 2. SHA-256 Padding
+
+SHA-256 uses:
+
+* **512-bit blocks**
+* one `1` bit
+* enough `0` bits
+* a **64-bit representation of the original message length**
+
+The final block has the structure:
+
+```text
+Original message | 1 | zeros | 64-bit length
+```
+
+For our message:
+
+```text
+24 bits | 1 bit | ? zeros | 64 bits
+```
+
+The final block must contain 512 bits:
+
+$$
+24 + 1 + k + 64 = 512
+$$
+
+Therefore:
+
+$$
+k = 512 - 24 - 1 - 64
+$$
+
+$$
+\boxed{k = 423}
+$$
+
+So we add:
+
+* **1 one-bit**
+* **423 zero-bits**
+* **64-bit length field**
+
+---
+
+## 3. Encode the Original Length
+
+The original message length is:
+
+$$
+L = 24
+$$
+
+In hexadecimal:
+
+$$
+24_{10} = 18_{16}
+$$
+
+SHA-256 stores the length as a **64-bit big-endian integer**:
+
+```text
+0000000000000018
+```
+
+In binary:
+
+```text
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00011000
+```
+
+---
+
+## 4. Complete Padded Message
+
+The original message is:
+
+```text
+01100011 01100100 01100101
+```
+
+Then we append the `1` bit:
+
+```text
+01100011 01100100 01100101 1
+```
+
+Then:
+
+```text
+423 zero bits
+```
+
+Finally, we append the 64-bit length:
+
+```text
+0000000000000018
+```
+
+Therefore:
+
+$$
+24 + 1 + 423 + 64 = 512
+$$
+
+So the padded message is exactly:
+
+$$
+\boxed{512\text{ bits}}
+$$
+
+or:
+
+$$
+\boxed{64\text{ bytes}}
+$$
+
+---
+
+## 5. Complete Block in Hexadecimal
+
+The original message is:
+
+```text
+c = 63
+d = 64
+e = 65
+```
+
+The first padding bit is `1`.
+
+The first four bytes therefore become:
+
+```text
+63 64 65 80
+```
+
+Why `80`?
+
+Because:
+
+```text
+10000000 = 0x80
+```
+
+The `1` padding bit becomes the most significant bit of the next byte, followed by seven zero bits.
+
+The complete 512-bit block is:
+
+```text
+63646580
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000000
+00000018
+```
+
+As one continuous hexadecimal string:
+
+```text
+6364658000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018
+```
+
+There are:
+
+$$
+64\text{ bytes} \times 2 = 128\text{ hexadecimal digits}
+$$
+
+---
+
+## 6. Identify \(W_0,\ldots,W_{15}\)
+
+SHA-256 divides each 512-bit block into:
+
+$$
+16 \times 32\text{-bit words}
+$$
+
+Each word contains **8 hexadecimal digits**.
+
+Split the block into 8-hex-digit groups:
+
+```text
+63646580 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000000
+00000000 00000000 00000000 00000018
+```
+
+Therefore:
+
+| Word       | Value      |
+| ---------- | ---------- |
+| \(W_0\)    | `63646580` |
+| \(W_1\)    | `00000000` |
+| \(W_2\)    | `00000000` |
+| \(W_3\)    | `00000000` |
+| \(W_4\)    | `00000000` |
+| \(W_5\)    | `00000000` |
+| \(W_6\)    | `00000000` |
+| \(W_7\)    | `00000000` |
+| \(W_8\)    | `00000000` |
+| \(W_9\)    | `00000000` |
+| \(W_{10}\) | `00000000` |
+| \(W_{11}\) | `00000000` |
+| \(W_{12}\) | `00000000` |
+| \(W_{13}\) | `00000000` |
+| \(W_{14}\) | `00000000` |
+| \(W_{15}\) | `00000018` |
+
+---
+
+## 7. Why is \(W_0 = \texttt{63646580}\)?
+
+The first 32 bits are:
+
+```text
+c        d        e        padding
+01100011 01100100 01100101 10000000
+```
+
+Convert each byte to hexadecimal:
+
+```text
+01100011 = 63
+01100100 = 64
+01100101 = 65
+10000000 = 80
+```
+
+Therefore:
+
+```text
+W₀ = 63646580
+```
+
+---
+
+## 8. Why is \(W_{15} = \texttt{00000018}\)?
+
+The final 64 bits store the original message length.
+
+The length is:
+
+$$
+24_{10} = 18_{16}
+$$
+
+As a 64-bit big-endian value:
+
+```text
+0000000000000018
+```
+
+The last 32 bits are:
+
+```text
+00000018
+```
+
+Therefore:
+
+$$
+\boxed{W_{15} = \texttt{00000018}}
+$$
+
+---
+
+## Final Structure
+
+```text
+"cde"
+   ↓
+ASCII
+63 64 65
+   ↓
+24 bits
+   ↓
+Append 1 bit
+   ↓
+Append 423 zero bits
+   ↓
+Append 64-bit length
+0000000000000018
+   ↓
+512-bit padded block
+   ↓
+W₀ ... W₁₅
+   ↓
+Message schedule
+W₀ ... W₆₃
+   ↓
+64 compression rounds
+```
+
+### Final Answer
+
+$$
+\boxed{
+W_0=\texttt{63646580}
+}
+$$
+
+$$
+\boxed{
+W_1=\cdots=W_{14}=\texttt{00000000}
+}
+$$
+
+$$
+\boxed{
+W_{15}=\texttt{00000018}
+}
+$$
+
+The padded message is:
+
+$$
+\boxed{512\text{ bits}=64\text{ bytes}}
+$$
+
+No compression rounds are calculated.
